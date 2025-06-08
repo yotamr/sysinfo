@@ -69,10 +69,10 @@ impl UserInner {
         }
     }
 
-    pub(crate) fn domain(&self) -> Option<&str> {
+    pub(crate) fn domain(&self) -> Option<String> {
         // For Windows, extract domain from the Uid(Sid)
         if let Some((_, domain)) = self.uid.0.account_name_and_domain() {
-            domain.as_deref()
+            domain
         } else {
             None
         }
