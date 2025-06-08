@@ -22,6 +22,7 @@ pub(crate) struct UserInner {
     pub(crate) name: String,
     c_user_name: Option<Vec<u16>>,
     is_local: bool,
+    pub(crate) domain: Option<String>,
 }
 
 impl UserInner {
@@ -31,12 +32,14 @@ impl UserInner {
         } else {
             Some(unsafe { c_name.as_wide() }.into())
         };
+        let domain = uid.0.account_name_and_domain().and_then(|(_, domain)| domain);
         Self {
             uid,
             gid: Gid(0),
             name,
             c_user_name,
             is_local,
+            domain,
         }
     }
 
@@ -69,13 +72,8 @@ impl UserInner {
         }
     }
 
-    pub(crate) fn domain(&self) -> Option<String> {
-        // For Windows, extract domain from the Uid(Sid)
-        if let Some((_, domain)) = self.uid.0.account_name_and_domain() {
-            domain
-        } else {
-            None
-        }
+    pub(crate) fn domain(&self) -> Option<&str> {
+        self.domain.as_deref()
     }
 }
 
