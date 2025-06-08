@@ -68,6 +68,15 @@ impl UserInner {
             Vec::new()
         }
     }
+
+    pub(crate) fn domain(&self) -> Option<&str> {
+        // For Windows, extract domain from the Uid(Sid)
+        if let Some((_, domain)) = self.uid.0.account_name_and_domain() {
+            domain.as_deref()
+        } else {
+            None
+        }
+    }
 }
 
 struct NetApiBuffer<T>(*mut T);

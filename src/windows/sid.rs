@@ -60,6 +60,13 @@ impl Sid {
     /// Retrieves the account name of this SID.
     #[cfg(feature = "user")]
     pub(crate) fn account_name(&self) -> Option<String> {
+        let (name, _domain) = self.account_name_and_domain()?;
+        Some(name)
+    }
+
+    /// Retrieves both the account name and domain of this SID.
+    #[cfg(feature = "user")]
+    pub(crate) fn account_name_and_domain(&self) -> Option<(String, Option<String>)> {
         unsafe {
             let mut name_len = 0;
             let mut domain_len = 0;
@@ -82,17 +89,14 @@ impl Sid {
             }
 
             let mut name = vec![0; name_len as usize];
-
-            // Reset length to 0 since we're still passing a NULL pointer
-            // for the domain.
-            domain_len = 0;
+            let mut domain = vec![0; domain_len as usize];
 
             if LookupAccountSidW(
                 PCWSTR::null(),
                 sid,
                 Some(PWSTR::from_raw(name.as_mut_ptr())),
                 &mut name_len,
-                None,
+                Some(PWSTR::from_raw(domain.as_mut_ptr())),
                 &mut domain_len,
                 &mut name_use,
             )
@@ -105,7 +109,19 @@ impl Sid {
                 return None;
             }
 
-            Some(to_utf8_str(PWSTR::from_raw(name.as_mut_ptr())))
+            let username = to_utf8_str(PWSTR::from_raw(name.as_mut_ptr()));
+            let domain_name = if domain_len > 1 {
+                let domain_str = to_utf8_str(PWSTR::from_raw(domain.as_mut_ptr()));
+                if domain_str.is_empty() {
+                    None
+                } else {
+                    Some(domain_str)
+                }
+            } else {
+                None
+            };
+
+            Some((username, domain_name))
         }
     }
 }

@@ -107,6 +107,28 @@ impl User {
     pub fn groups(&self) -> Vec<Group> {
         self.inner.groups()
     }
+
+    /// Returns the domain of the user.
+    ///
+    /// ⚠️ This information is only available on Windows.
+    /// On other platforms, this method will return `None`.
+    ///
+    /// ```no_run
+    /// use sysinfo::Users;
+    ///
+    /// let users = Users::new_with_refreshed_list();
+    /// for user in users.list() {
+    ///     if let Some(domain) = user.domain() {
+    ///         println!("{} is in domain {}", user.name(), domain);
+    ///     } else {
+    ///         println!("{} has no domain information", user.name());
+    ///     }
+    /// }
+    /// ```
+    #[cfg(windows)]
+    pub fn domain(&self) -> Option<&str> {
+        self.inner.domain()
+    }
 }
 
 #[derive(PartialEq, Eq, PartialOrd, Ord, Debug)]
